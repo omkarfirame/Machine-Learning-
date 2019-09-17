@@ -1,0 +1,101 @@
+mdata = read.csv("file:///D:/ML/Datasets/data.csv",header = T)
+mdata=mdata[,-c(1,33)]
+#table(mdata$M)
+#shuf=sample(2,nrow(mdata),prob = c(0.75,0.25),replace=TRUE)
+shuff=mdata[sample(1:nrow(mdata)),]
+train=shuff[1:455,]
+test=shuff[456:569,]
+#test=mdata[shuf==2,]
+#train=mdata[shuf==1,]
+
+
+#randomforest
+
+library(randomForest)
+library(caret)
+rf=randomForest(diagnosis~.,data = train,importance=T,proximity=T)
+pred=predict(rf,test)
+cm=confusionMatrix(pred,test$diagnosis)
+over=as.numeric(cm$overall['Accuracy'])
+im=importance(rf)
+sr=sort(im[,3],decreasing = T)
+nVec=1:30
+acc1=NULL
+sr2=NULL
+tr=NULL
+sr1=sr
+for(n in 30:2)
+{
+  sr=sr1
+  va=paste(names(sr)[-n],collapse="+")
+  rnf = as.formula(paste(names(mdata)[1], va, sep = " ~ "))
+  rf1=randomForest(rnf,data=train,importance = T,proximity = T)
+  pd1=predict(rf1,test)
+  cm1=confusionMatrix(pd1,test$diagnosis)
+  acc=as.numeric(cm1$overall['Accuracy'])
+
+  acc1=c(acc1,acc)
+  
+  im1=importance(rf1)
+  sr1=sort(im1[,3],decreasing = T)
+  
+  sr2=c(sr2,sr1)
+
+}
+ss=cumsum(29:1)
+bst.a=ss[which.max(acc1)-1]:ss[which.max(acc1)]
+bst_atr=sr2[bst.a]
+
+bst=seq(2,length(bst_atr),by=2)
+
+CV<-cut(1:nrow(mdata),breaks=5, labels=FALSE)
+
+ntre=seq(50,500,by=50)
+c4=NULL
+c5=NULL
+
+ntr=NULL
+for(i in bst)
+{
+  c3=NULL
+  for(j in ntre)
+  {
+    
+    c1=NULL
+    
+    for( m in 1:5) 
+    {
+      
+      test1<- shuff[which(m==CV,arr.ind=T),]
+      train1<- shuff[-(which(m==CV,arr.ind=T)),]
+      
+      var.predict1<-paste(names(bst_atr)[1:length(bst_atr)],collapse="+")
+      rnft.formula1 <- as.formula(paste(names(mdata)[1], var.predict1, sep = " ~ "))
+      rf1 <- randomForest(rnft.formula1 ,data = train1,ntree=j,mtry=i, importance = TRUE, proximity = TRUE)
+      pred1 <- predict(rf1,test1)
+      cm1 <- confusionMatrix(pred1,test1$diagnosis)
+      over1=as.numeric(cm1$overall['Accuracy'])
+      
+      c1=c(c1,over1)
+    }  
+    
+    c2=mean(c1)
+    
+    c3=c(c3,c2)
+  }  
+  c4=c(c4,max(c3))
+  ntr=c(ntr,ntre[which.max(c3)])
+}
+
+zz=data.frame(bst,c4,ntr)
+zx=which.max(zz[,2])
+MTRY=zz[zx,1]
+ACCURACY=zz[zx,2]
+NTREE=zz[zx,3]
+print("Best accuracy and its respective Mtry and Ntree are:")
+print(data.frame(MTRY,ACCURACY,NTREE))               
+print("No of important attributes are  :")
+print(length(bst_atr))
+print("Important attributes are :")
+print(names(bst_atr))
+
