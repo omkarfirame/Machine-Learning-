@@ -1,0 +1,32 @@
+NB=function(x1,x2,x3,x4)
+{
+dataa=iris[1:100,]
+mu=as.numeric(colMeans(dataa[1:50,1:4]))
+mu2=as.numeric(colMeans(dataa[51:100,1:4]))
+prob=function(x,mu,varr)
+{
+  return(exp(-(x-mu)^2/(2*varr))/(sqrt(2*pi*varr)))
+}
+sigma=c()
+prob11=c()
+prob22=c()
+input=c(x1,x2,x3,x4)
+for(i in 1:4)
+{
+prob1=prob(input[i],mu[i],var(dataa[1:50,i]))
+prob2=prob(input[i],mu2[i],var(dataa[51:100,i]))
+prob11=c(prob11,prob1)
+prob22=c(prob22,prob2)
+}
+
+ps=prod(prob11)*0.5
+pv=prod(prob22)*0.5
+PSn=ps/(ps+pv)
+PVn=pv/(ps+pv)
+if(PSn<PVn)
+{
+  return(cat(sprintf("The Class of given example is Veriscolor")))
+}
+if(PSn>PVn) {return(cat(sprintf("The Class of given example is Setosa")))}
+
+}
