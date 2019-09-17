@@ -1,13 +1,9 @@
 mdata = read.csv("file:///D:/ML/Datasets/data.csv",header = T)
 mdata=mdata[,-c(1,33)]
-#table(mdata$M)
-#shuf=sample(2,nrow(mdata),prob = c(0.75,0.25),replace=TRUE)
+
 shuff=mdata[sample(1:nrow(mdata)),]
 train=shuff[1:455,]
 test=shuff[456:569,]
-#test=mdata[shuf==2,]
-#train=mdata[shuf==1,]
-
 
 #randomforest
 
